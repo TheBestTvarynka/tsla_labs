@@ -1,0 +1,4 @@
+E,A,B,C,D
+1,0,a,b,c
+E->0A|e;A->aB|aD;B->bB|1C|c;D->aD|0C|c
+E

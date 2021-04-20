@@ -1,0 +1,4 @@
+a,b,c,d
+A,D,E,S
+A->aB|c;B->c|dD;D->aD|cA|d
+S
