@@ -1,3 +1,4 @@
+// Enum with all supported token types
 #[derive(Debug)]
 pub enum TokenType {
     Let,
@@ -23,12 +24,17 @@ pub enum TokenType {
     ArithmeticOperation,
 }
 
+// enum with token value. token value can be one of the two operions:
+// 1) value - data that stored inside the token
+// 2) ref (stands for references) - id to the value in the table
 #[derive(Debug)]
 pub enum Value {
     Value(String),
     Ref(u64),
 }
 
+// token structure
+// token holds following data: type, value, line of this token, position at this line
 pub struct Token {
     pub token_type: TokenType,
     pub value: Value,

@@ -5,6 +5,7 @@ use crate::reader::token::{Token, TokenType, Value};
 use std::collections::HashMap;
 use regex::Regex;
 
+// structure for storing tokens and table with values
 pub struct GeneratedTable {
     tokens: Vec<Token>,
     table: HashMap<u64, String>,
@@ -18,6 +19,7 @@ impl GeneratedTable {
         }
     }
 
+    // just print table data into stdout
     pub fn print(&self) {
         println!("Table:");
         for (id, value) in &self.table {
@@ -29,10 +31,12 @@ impl GeneratedTable {
         }
     }
 
+    // adds new token to all tokens
     pub fn add_token(&mut self, token: Token) {
         self.tokens.push(token);
     }
 
+    // add value to the table and returns id of added value
     pub fn add_value(&mut self, value: String) -> u64 {
         let size = self.table.len() as u64;
         self.table.insert(size, value);
@@ -40,6 +44,8 @@ impl GeneratedTable {
     }
 }
 
+// this function parses one token from provided line
+// funtion adds new token to result table and returns rest of the line and number - length of the parsed token
 fn get_token(line: String, table: &mut GeneratedTable, line_numer: u64, position: u64) -> (String, u64) {
     let re_int = Regex::new(r"^\d+").unwrap();
     let re_float = Regex::new(r"^[0-9]*\.[0-9]*").unwrap();
@@ -92,13 +98,13 @@ fn get_token(line: String, table: &mut GeneratedTable, line_numer: u64, position
         table.add_token(Token::new(TokenType::F32Literal, Value::Ref(id), line_numer, position));
         (line[res.end()..].to_string(), (res.end() - res.start()) as u64)
     } else if let Some(res) = re_arithmetic.find(&line) {
-        println!("res: int: {:?}", res);
+        println!("res: aith: {:?}", res);
         let value = line[res.start()..res.end()].to_string();
         let id = table.add_value(value);
         table.add_token(Token::new(TokenType::ArithmeticOperation, Value::Ref(id), line_numer, position));
         (line[res.end()..].to_string(), (res.end() - res.start()) as u64)
     } else if let Some(res) = re_relop.find(&line) {
-        println!("res: int: {:?}", res);
+        println!("res: relop: {:?}", res);
         let value = line[res.start()..res.end()].to_string();
         let id = table.add_value(value);
         table.add_token(Token::new(TokenType::Relop, Value::Ref(id), line_numer, position));
@@ -116,11 +122,16 @@ fn get_token(line: String, table: &mut GeneratedTable, line_numer: u64, position
         table.add_token(Token::new(TokenType::Name, Value::Ref(id), line_numer, position));
         (line[res.end()..].to_string(), (res.end() - res.start()) as u64)
     } else {
-        // println!("skip: {:?}", line[0..1].to_string());
+        let c = line[0..1].to_string();
+        if c != "\n" && c != " " && c != "\t" {
+            panic!("Undefined token: {:?} at line {} at position {}", c, line, position);
+        }
         (line[1..].to_string(), 1)
     }
 }
 
+// this function parses one line and add all parsed tokens to the result table GeneratedTable
+// also I track line number and position in this line. we will use this data for showing the error
 fn parse_line(mut line: String, table: &mut GeneratedTable, line_number: u64) {
     let mut position = 1;
     while line.len() > 0 {
@@ -130,6 +141,10 @@ fn parse_line(mut line: String, table: &mut GeneratedTable, line_number: u64) {
     }
 }
 
+// this functions parses file by provided files name and returns Result
+// if Result is Err then some Error occured while parsing
+// if Result is Ok the all good
+// for reading lines I use BuffReader
 pub fn parse_file(filename: &str) -> Result<GeneratedTable, String> {
     let code = BufReader::new(File::open(filename).map_err(|err| format!("Error with file opening: {:?}", err))?);    
     let mut table = GeneratedTable::new();
