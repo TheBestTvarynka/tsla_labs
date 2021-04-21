@@ -51,7 +51,7 @@ fn get_token(line: String, table: &mut GeneratedTable, line_numer: u64, position
     let re_float = Regex::new(r"^[0-9]*\.[0-9]*").unwrap();
     let re_name = Regex::new(r"^[a-zA-Z][a-zA-Z_0-9]*").unwrap();
     let re_arithmetic = Regex::new(r"^(\+|-|\*)").unwrap();
-    let re_relop = Regex::new(r"^(==)|(!=)|>|<").unwrap();
+    let re_relop = Regex::new(r"^((==)|(!=)|>|<)").unwrap();
 
     if line.starts_with("(") {
         table.add_token(Token::new(TokenType::OpenP, Value::Value("(".to_owned()), line_numer, position));
@@ -92,31 +92,31 @@ fn get_token(line: String, table: &mut GeneratedTable, line_numer: u64, position
         table.add_token(Token::new(TokenType::Type, Value::Value("f32".to_owned()), line_numer, position));
         (line[3..].to_string(), 3)
     } else if let Some(res) = re_float.find(&line) {
-        println!("res: int: {:?}", res);
+        // println!("res: int: {:?}", res);
         let value = line[res.start()..res.end()].to_string();
         let id = table.add_value(value);
         table.add_token(Token::new(TokenType::F32Literal, Value::Ref(id), line_numer, position));
         (line[res.end()..].to_string(), (res.end() - res.start()) as u64)
     } else if let Some(res) = re_arithmetic.find(&line) {
-        println!("res: aith: {:?}", res);
+        // println!("res: aith: {:?}", res);
         let value = line[res.start()..res.end()].to_string();
         let id = table.add_value(value);
         table.add_token(Token::new(TokenType::ArithmeticOperation, Value::Ref(id), line_numer, position));
         (line[res.end()..].to_string(), (res.end() - res.start()) as u64)
     } else if let Some(res) = re_relop.find(&line) {
-        println!("res: relop: {:?}", res);
+        // println!("res: relop: {:?}", res);
         let value = line[res.start()..res.end()].to_string();
         let id = table.add_value(value);
         table.add_token(Token::new(TokenType::Relop, Value::Ref(id), line_numer, position));
         (line[res.end()..].to_string(), (res.end() - res.start()) as u64)
     } else if let Some(res) = re_int.find(&line) {
-        println!("res: int: {:?}", res);
+        // println!("res: int: {:?}", res);
         let value = line[res.start()..res.end()].to_string();
         let id = table.add_value(value);
         table.add_token(Token::new(TokenType::U32Literal, Value::Ref(id), line_numer, position));
         (line[res.end()..].to_string(), (res.end() - res.start()) as u64)
     } else if let Some(res) = re_name.find(&line) {
-        println!("res: name: {:?}", res);
+        // println!("res: name: {:?}", res);
         let value = line[res.start()..res.end()].to_string();
         let id = table.add_value(value);
         table.add_token(Token::new(TokenType::Name, Value::Ref(id), line_numer, position));
