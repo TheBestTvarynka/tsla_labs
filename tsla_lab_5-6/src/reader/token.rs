@@ -48,4 +48,13 @@ impl Token {
             token_type, value, line, position
         }
     }
+
+    pub fn empty() -> Self {
+        Token {
+            token_type: TokenType::Semicolon,
+            value: Value::Value("empty token".to_owned()),
+            line: 0,
+            position: 0,
+        }
+    }
 }

@@ -7,8 +7,8 @@ use regex::Regex;
 
 // structure for storing tokens and table with values
 pub struct GeneratedTable {
-    tokens: Vec<Token>,
-    table: HashMap<u64, String>,
+    pub tokens: Vec<Token>,
+    pub table: HashMap<u64, String>,
 }
 
 impl GeneratedTable {
