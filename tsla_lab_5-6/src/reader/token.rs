@@ -1,5 +1,7 @@
+use crate::reader::lexer::GeneratedTable;
+
 // Enum with all supported token types
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum TokenType {
     Let,
     Mut,
@@ -22,12 +24,13 @@ pub enum TokenType {
     Type,
     MacrosSymbol,
     ArithmeticOperation,
+    Empty
 }
 
 // enum with token value. token value can be one of the two operions:
 // 1) value - data that stored inside the token
 // 2) ref (stands for references) - id to the value in the table
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Value {
     Value(String),
     Ref(u64),
@@ -35,6 +38,7 @@ pub enum Value {
 
 // token structure
 // token holds following data: type, value, line of this token, position at this line
+#[derive(Clone, Debug)]
 pub struct Token {
     pub token_type: TokenType,
     pub value: Value,
@@ -51,10 +55,17 @@ impl Token {
 
     pub fn empty() -> Self {
         Token {
-            token_type: TokenType::Semicolon,
+            token_type: TokenType::Empty,
             value: Value::Value("empty token".to_owned()),
             line: 0,
             position: 0,
+        }
+    }
+
+    pub fn get_value(&self, table: &GeneratedTable) -> String {
+        match self.value.clone() {
+            Value::Value(value) => value,
+            Value::Ref(id) => table.get_value(id),
         }
     }
 }

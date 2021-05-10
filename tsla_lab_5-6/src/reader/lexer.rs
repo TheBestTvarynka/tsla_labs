@@ -42,6 +42,10 @@ impl GeneratedTable {
         self.table.insert(size, value);
         size
     }
+
+    pub fn get_value(&self, id: u64) -> String {
+        self.table.get(&id).unwrap().clone()
+    }
 }
 
 // this function parses one token from provided line
