@@ -33,7 +33,7 @@ impl PartialEq for NodeType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node {
     pub token: Token,
     pub name: String,

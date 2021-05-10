@@ -18,7 +18,8 @@ impl Types {
     }
 
     pub fn starts_with(&self, pattern: &Vec<String>) -> bool {
-        if pattern.len() >= self.types.len() {
+        // if pattern.len() >= self.types.len() {
+        if pattern.len() > self.types.len() {
             false
         } else {
             for i in 0..pattern.len() {
@@ -112,8 +113,10 @@ impl LRTable {
             "T".to_owned(),
             "P".to_owned(),
             "Expression".to_owned()
+            // ,"let".to_owned(),
         ];
 
+        table.add_rule(vec!["Name".to_owned()], NodeType::Lit);
         table.add_rule(vec!["Lit".to_owned()], NodeType::T);
         table.add_rule(vec!["T".to_owned(), "*".to_owned(), "T".to_owned()], NodeType::T);
         table.add_rule(vec!["T".to_owned(), "/".to_owned(), "T".to_owned()], NodeType::T);
@@ -125,6 +128,16 @@ impl LRTable {
         table.add_rule(vec!["Expression".to_owned(), ">".to_owned(), "Expression".to_owned()], NodeType::Expression);
         table.add_rule(vec!["Expression".to_owned(), "!=".to_owned(), "Expression".to_owned()], NodeType::Expression);
         table.add_rule(vec!["Expression".to_owned(), "==".to_owned(), "Expression".to_owned()], NodeType::Expression);
+        table.add_rule(vec![
+            "let".to_owned(),
+            "Name".to_owned(),
+            "=".to_owned(),
+            "Expression".to_owned(),
+            ";".to_owned()
+        ], NodeType::Statement);
+        table.add_rule(vec!["Statement".to_owned()], NodeType::Program);
+        table.add_rule(vec!["Program".to_owned(), "Program".to_owned()], NodeType::Program);
+        table.add_rule(vec!["Program".to_owned(), "let".to_owned()], NodeType::Program);
 
         let binary_fn = |node_type: NodeType| -> ReductionFn {
             Box::new(move |mut childs| {
@@ -159,6 +172,22 @@ impl LRTable {
         table.add_reduction_fn(vec!["Expression".to_owned(), "<".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
         table.add_reduction_fn(vec!["Expression".to_owned(), "==".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
         table.add_reduction_fn(vec!["Expression".to_owned(), "!=".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
+        table.add_reduction_fn(vec![
+            "let".to_owned(),
+            "Name".to_owned(),
+            "=".to_owned(),
+            "Expression".to_owned(),
+            ";".to_owned()
+        ], Box::new(|childs| Node {
+            name: "Statement".to_owned(),
+            node_type: NodeType::Statement,
+            params: HashMap::new(),
+            childs: vec![childs[1].clone(), childs[3].clone()],
+            token: Token::empty(),
+        }));
+        table.add_reduction_fn(vec!["Statement".to_owned()], unary_fn(NodeType::Program));
+        table.add_reduction_fn(vec!["Program".to_owned(), "Statement".to_owned()], unary_fn(NodeType::Program));
+        table.add_reduction_fn(vec!["Program".to_owned(), "Program".to_owned()], unary_fn(NodeType::Program));
         table
     }
 
@@ -175,11 +204,14 @@ impl LRTable {
     }
 
     fn if_contain_similar_rule(&self, pattern: &Vec<String>) -> bool {
+        println!("if_contain_similar: {:?}", pattern);
         for (key, _) in self.rules.clone() {
             if key.starts_with(pattern) {
+                println!("true");
                 return true;
             }
         }
+        println!("false");
         false
     }
 
@@ -195,11 +227,11 @@ impl LRTable {
         false
     }
 
-    fn count_rules(&self, pattern: &Vec<String>) -> usize {
-        println!("count rules: {:?}", pattern);
+    fn count_similar_rules(&self, pattern: &Vec<String>) -> usize {
+        println!("count similar rules: {:?}", pattern);
         let mut count = 0;
         for (key, _) in self.rules.clone() {
-            if key.equal(pattern) {
+            if key.starts_with(pattern) {
                 count += 1;
             }
         }
@@ -246,7 +278,7 @@ impl LRTable {
             for i in 0..max {
                 pattern1.insert(0, stack.get_nth_name(i));
                 pattern2.insert(0, stack.get_nth_name(i));
-                println!("cur pattern: {:?}", pattern1);
+                // println!("cur pattern: {:?}", pattern1);
                 if self.if_contain_similar_rule(&pattern2) {
                     println!("add to state: {:?}", node);
                     stack.add_state(node);
@@ -259,7 +291,7 @@ impl LRTable {
                     println!("return");
                     return;
                 }
-                if self.if_contain_rule(&pattern1) && self.count_rules(&pattern1) == 1 {
+                if self.if_contain_rule(&pattern1) {
                     reduction_size = i as i32;
                     // break;
                 }
