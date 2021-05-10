@@ -68,7 +68,7 @@ impl Hash for Types {
     }
 }
 
-type ReductionFn = fn(Vec<Box<Node>>) -> Node;
+type ReductionFn = Box<dyn Fn(Vec<Box<Node>>) -> Node>;
 
 pub struct LRTable {
     rules: HashMap<Types, NodeType>,
@@ -121,68 +121,44 @@ impl LRTable {
         table.add_rule(vec!["P".to_owned(), "+".to_owned(), "P".to_owned()], NodeType::P);
         table.add_rule(vec!["P".to_owned(), "-".to_owned(), "P".to_owned()], NodeType::P);
         table.add_rule(vec!["P".to_owned()], NodeType::Expression);
+        table.add_rule(vec!["Expression".to_owned(), "<".to_owned(), "Expression".to_owned()], NodeType::Expression);
+        table.add_rule(vec!["Expression".to_owned(), ">".to_owned(), "Expression".to_owned()], NodeType::Expression);
+        table.add_rule(vec!["Expression".to_owned(), "!=".to_owned(), "Expression".to_owned()], NodeType::Expression);
+        table.add_rule(vec!["Expression".to_owned(), "==".to_owned(), "Expression".to_owned()], NodeType::Expression);
 
-        table.add_reduction_fn(vec!["Lit".to_owned()], |childs| Node {
-            name: "T".to_owned(),
-            childs,
-            node_type: NodeType::T,
-            params: HashMap::new(),
-            token: Token::empty(),
-        });
-        table.add_reduction_fn(vec!["T".to_owned(), "*".to_owned(), "T".to_owned()], |mut childs| {
-            let node = childs.remove(1);
-            Node {
-                name: "T".to_owned(),
+        let binary_fn = |node_type: NodeType| -> ReductionFn {
+            Box::new(move |mut childs| {
+                let node = childs.remove(1);
+                Node {
+                    name: NodeType::to_string(node_type),
+                    childs,
+                    node_type,
+                    params: HashMap::new(),
+                    token: node.token,
+                }
+            })
+        };
+        let unary_fn = |node_type: NodeType| -> ReductionFn {
+            Box::new(move |childs| Node {
+                name: NodeType::to_string(node_type),
                 childs,
-                node_type: NodeType::T,
+                node_type,
                 params: HashMap::new(),
-                token: node.token,
-            }
-        });
-        table.add_reduction_fn(vec!["T".to_owned(), "/".to_owned(), "T".to_owned()], |mut childs| {
-            let node = childs.remove(1);
-            Node {
-                name: "T".to_owned(),
-                childs,
-                node_type: NodeType::T,
-                params: HashMap::new(),
-                token: node.token,
-            }
-        });
-        table.add_reduction_fn(vec!["T".to_owned()], |childs| Node {
-            name: "P".to_owned(),
-            node_type: NodeType::P,
-            params: HashMap::new(),
-            token: Token::empty(),
-            childs,
-        });
-        table.add_reduction_fn(vec!["P".to_owned(), "+".to_owned(), "P".to_owned()], |mut childs| {
-            let node = childs.remove(1);
-            Node {
-                name: "P".to_owned(),
-                node_type: NodeType::P,
-                params: HashMap::new(),
-                token: node.token,
-                childs,
-            }
-        });
-        table.add_reduction_fn(vec!["P".to_owned(), "-".to_owned(), "P".to_owned()], |mut childs| {
-            let node = childs.remove(1);
-            Node {
-                name: "P".to_owned(),
-                node_type: NodeType::P,
-                params: HashMap::new(),
-                token: node.token,
-                childs,
-            }
-        });
-        table.add_reduction_fn(vec!["P".to_owned()], |childs| Node {
-            name: "Expression".to_owned(),
-            node_type: NodeType::Expression,
-            params: HashMap::new(),
-            token: Token::empty(),
-            childs
-        });
+                token: Token::empty(),
+            })
+        };
+
+        table.add_reduction_fn(vec!["Lit".to_owned()], unary_fn(NodeType::T));
+        table.add_reduction_fn(vec!["T".to_owned(), "*".to_owned(), "T".to_owned()], binary_fn(NodeType::T));
+        table.add_reduction_fn(vec!["T".to_owned(), "/".to_owned(), "T".to_owned()], binary_fn(NodeType::T));
+        table.add_reduction_fn(vec!["T".to_owned()], unary_fn(NodeType::P));
+        table.add_reduction_fn(vec!["P".to_owned(), "+".to_owned(), "P".to_owned()], binary_fn(NodeType::P));
+        table.add_reduction_fn(vec!["P".to_owned(), "-".to_owned(), "P".to_owned()], binary_fn(NodeType::P));
+        table.add_reduction_fn(vec!["P".to_owned()], unary_fn(NodeType::Expression));
+        table.add_reduction_fn(vec!["Expression".to_owned(), ">".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
+        table.add_reduction_fn(vec!["Expression".to_owned(), "<".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
+        table.add_reduction_fn(vec!["Expression".to_owned(), "==".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
+        table.add_reduction_fn(vec!["Expression".to_owned(), "!=".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
         table
     }
 
