@@ -27,6 +27,18 @@ pub enum TokenType {
     Empty
 }
 
+impl TokenType {
+    pub fn to_string(token_type: TokenType) -> String {
+        match token_type {
+            TokenType::U32Literal => "U32Literal".to_owned(),
+            TokenType::F32Literal => "F32Literal".to_owned(),
+            TokenType::StringLiteral => "StringLiteral".to_owned(),
+            TokenType::I42Literal => "I42Literal".to_owned(),
+            _ => "()".to_owned(),
+        }
+    }
+}
+
 // enum with token value. token value can be one of the two operions:
 // 1) value - data that stored inside the token
 // 2) ref (stands for references) - id to the value in the table

@@ -116,18 +116,18 @@ impl LRTable {
             // ,"let".to_owned(),
         ];
 
-        table.add_rule(vec!["Name".to_owned()], NodeType::Lit);
-        table.add_rule(vec!["Lit".to_owned()], NodeType::T);
-        table.add_rule(vec!["T".to_owned(), "*".to_owned(), "T".to_owned()], NodeType::T);
-        table.add_rule(vec!["T".to_owned(), "/".to_owned(), "T".to_owned()], NodeType::T);
-        table.add_rule(vec!["T".to_owned()], NodeType::P);
-        table.add_rule(vec!["P".to_owned(), "+".to_owned(), "P".to_owned()], NodeType::P);
-        table.add_rule(vec!["P".to_owned(), "-".to_owned(), "P".to_owned()], NodeType::P);
-        table.add_rule(vec!["P".to_owned()], NodeType::Expression);
-        table.add_rule(vec!["Expression".to_owned(), "<".to_owned(), "Expression".to_owned()], NodeType::Expression);
-        table.add_rule(vec!["Expression".to_owned(), ">".to_owned(), "Expression".to_owned()], NodeType::Expression);
-        table.add_rule(vec!["Expression".to_owned(), "!=".to_owned(), "Expression".to_owned()], NodeType::Expression);
-        table.add_rule(vec!["Expression".to_owned(), "==".to_owned(), "Expression".to_owned()], NodeType::Expression);
+        table.add_rule(vec!["Name".to_owned()], NodeType::Lit("".to_owned()));
+        table.add_rule(vec!["Lit".to_owned()], NodeType::T("Lit".to_owned()));
+        table.add_rule(vec!["T".to_owned(), "*".to_owned(), "T".to_owned()], NodeType::T("*".to_owned()));
+        table.add_rule(vec!["T".to_owned(), "/".to_owned(), "T".to_owned()], NodeType::T("/".to_owned()));
+        table.add_rule(vec!["T".to_owned()], NodeType::P("T".to_owned()));
+        table.add_rule(vec!["P".to_owned(), "+".to_owned(), "P".to_owned()], NodeType::P("+".to_owned()));
+        table.add_rule(vec!["P".to_owned(), "-".to_owned(), "P".to_owned()], NodeType::P("-".to_owned()));
+        table.add_rule(vec!["P".to_owned()], NodeType::Expression("Expression".to_owned()));
+        table.add_rule(vec!["Expression".to_owned(), "<".to_owned(), "Expression".to_owned()], NodeType::Expression("<".to_owned()));
+        table.add_rule(vec!["Expression".to_owned(), ">".to_owned(), "Expression".to_owned()], NodeType::Expression(">".to_owned()));
+        table.add_rule(vec!["Expression".to_owned(), "!=".to_owned(), "Expression".to_owned()], NodeType::Expression("!=".to_owned()));
+        table.add_rule(vec!["Expression".to_owned(), "==".to_owned(), "Expression".to_owned()], NodeType::Expression("==".to_owned()));
         table.add_rule(vec![
             "let".to_owned(),
             "Name".to_owned(),
@@ -143,9 +143,9 @@ impl LRTable {
             Box::new(move |mut childs| {
                 let node = childs.remove(1);
                 Node {
-                    name: NodeType::to_string(node_type),
+                    name: NodeType::to_string(node_type.clone()),
                     childs,
-                    node_type,
+                    node_type: node_type.clone(),
                     params: HashMap::new(),
                     token: node.token,
                 }
@@ -153,25 +153,25 @@ impl LRTable {
         };
         let unary_fn = |node_type: NodeType| -> ReductionFn {
             Box::new(move |childs| Node {
-                name: NodeType::to_string(node_type),
+                name: NodeType::to_string(node_type.clone()),
                 childs,
-                node_type,
+                node_type: node_type.clone(),
                 params: HashMap::new(),
                 token: Token::empty(),
             })
         };
 
-        table.add_reduction_fn(vec!["Lit".to_owned()], unary_fn(NodeType::T));
-        table.add_reduction_fn(vec!["T".to_owned(), "*".to_owned(), "T".to_owned()], binary_fn(NodeType::T));
-        table.add_reduction_fn(vec!["T".to_owned(), "/".to_owned(), "T".to_owned()], binary_fn(NodeType::T));
-        table.add_reduction_fn(vec!["T".to_owned()], unary_fn(NodeType::P));
-        table.add_reduction_fn(vec!["P".to_owned(), "+".to_owned(), "P".to_owned()], binary_fn(NodeType::P));
-        table.add_reduction_fn(vec!["P".to_owned(), "-".to_owned(), "P".to_owned()], binary_fn(NodeType::P));
-        table.add_reduction_fn(vec!["P".to_owned()], unary_fn(NodeType::Expression));
-        table.add_reduction_fn(vec!["Expression".to_owned(), ">".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
-        table.add_reduction_fn(vec!["Expression".to_owned(), "<".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
-        table.add_reduction_fn(vec!["Expression".to_owned(), "==".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
-        table.add_reduction_fn(vec!["Expression".to_owned(), "!=".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression));
+        table.add_reduction_fn(vec!["Lit".to_owned()], unary_fn(NodeType::T("Lit".to_owned())));
+        table.add_reduction_fn(vec!["T".to_owned(), "*".to_owned(), "T".to_owned()], binary_fn(NodeType::T("*".to_owned())));
+        table.add_reduction_fn(vec!["T".to_owned(), "/".to_owned(), "T".to_owned()], binary_fn(NodeType::T("/".to_owned())));
+        table.add_reduction_fn(vec!["T".to_owned()], unary_fn(NodeType::P("T".to_owned())));
+        table.add_reduction_fn(vec!["P".to_owned(), "+".to_owned(), "P".to_owned()], binary_fn(NodeType::P("+".to_owned())));
+        table.add_reduction_fn(vec!["P".to_owned(), "-".to_owned(), "P".to_owned()], binary_fn(NodeType::P("-".to_owned())));
+        table.add_reduction_fn(vec!["P".to_owned()], unary_fn(NodeType::Expression("P".to_owned())));
+        table.add_reduction_fn(vec!["Expression".to_owned(), ">".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression(">".to_owned())));
+        table.add_reduction_fn(vec!["Expression".to_owned(), "<".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression("<".to_owned())));
+        table.add_reduction_fn(vec!["Expression".to_owned(), "==".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression("==".to_owned())));
+        table.add_reduction_fn(vec!["Expression".to_owned(), "!=".to_owned(), "Expression".to_owned()], binary_fn(NodeType::Expression("!=".to_owned())));
         table.add_reduction_fn(vec![
             "let".to_owned(),
             "Name".to_owned(),
@@ -196,46 +196,46 @@ impl LRTable {
     }
 
     fn if_contain_rule(&self, pattern: &Vec<String>) -> bool {
-        println!("if_contain_rule: {:?}", pattern);
+        // println!("if_contain_rule: {:?}", pattern);
         let types = Types::from_vec(pattern.clone());
         let res = self.rules.contains_key(&types);
-        println!("res: {}", res);
+        // println!("res: {}", res);
         res
     }
 
     fn if_contain_similar_rule(&self, pattern: &Vec<String>) -> bool {
-        println!("if_contain_similar: {:?}", pattern);
+        // println!("if_contain_similar: {:?}", pattern);
         for (key, _) in self.rules.clone() {
             if key.starts_with(pattern) {
-                println!("true");
+                // println!("true");
                 return true;
             }
         }
-        println!("false");
+        // println!("false");
         false
     }
 
     fn if_non_terminal(&self, symbol: &String) -> bool {
-        println!("if_terminal: {}", symbol);
+        // println!("if_terminal: {}", symbol);
         for i in &self.non_terminals {
             if i == symbol {
-                println!("res: true");
+                // println!("res: true");
                 return true
             }
         }
-        println!("res: false");
+        // println!("res: false");
         false
     }
 
     fn count_similar_rules(&self, pattern: &Vec<String>) -> usize {
-        println!("count similar rules: {:?}", pattern);
+        // println!("count similar rules: {:?}", pattern);
         let mut count = 0;
         for (key, _) in self.rules.clone() {
             if key.starts_with(pattern) {
                 count += 1;
             }
         }
-        println!("res: {}", count);
+        // println!("res: {}", count);
         count
     }
 
@@ -246,7 +246,7 @@ impl LRTable {
             reduct_pattern.insert(0, stack.get_nth_name(0));
             reduct_nodes.insert(0, Box::new(stack.pop()));
         }
-        println!("reduction of {:?}", reduct_pattern);
+        // println!("reduction of {:?}", reduct_pattern);
         stack.add_state(self.get_reduct_fn(reduct_pattern)(reduct_nodes));
     }
 
@@ -260,18 +260,18 @@ impl LRTable {
                 reduction_size = i;
             }
         }
-        println!("lens: {} {}", stack.len(), reduction_size);
+        // println!("lens: {} {}", stack.len(), reduction_size);
         self.reduct(stack, reduction_size + 1);
     }
 
     pub fn perform_action(&self, stack: &mut Stack, node: Node) {
         loop {
-            println!("stack:");
+            // println!("stack:");
             stack.print_names();
-            println!("node: {:?}", node);
+            // println!("node: {:?}", node);
             let max = if stack.len() >= self.max_len { self.max_len } else { stack.len() };
-            println!("max: {}", max);
-            wait();
+            // println!("max: {}", max);
+            // wait();
             let mut pattern1 = Vec::new();
             let mut pattern2 = vec![node.name.clone()];
             let mut reduction_size = -1;
@@ -280,15 +280,15 @@ impl LRTable {
                 pattern2.insert(0, stack.get_nth_name(i));
                 // println!("cur pattern: {:?}", pattern1);
                 if self.if_contain_similar_rule(&pattern2) {
-                    println!("add to state: {:?}", node);
+                    // println!("add to state: {:?}", node);
                     stack.add_state(node);
-                    println!("return");
+                    // println!("return");
                     return;
                 }
                 if self.if_contain_similar_rule(&pattern1) && self.if_non_terminal(&node.name) {
-                    println!("add to state: {:?}", node);
+                    // println!("add to state: {:?}", node);
                     stack.add_state(node);
-                    println!("return");
+                    // println!("return");
                     return;
                 }
                 if self.if_contain_rule(&pattern1) {
@@ -297,7 +297,7 @@ impl LRTable {
                 }
             }
             if reduction_size >= 0 {
-                println!("perform reduction:");
+                // println!("perform reduction:");
                 self.reduct(stack, reduction_size as usize + 1);
             }
         }
